@@ -1,25 +1,27 @@
 {
   "name": "flash-chat",
-  "version": "1.0.0",
-  "description": "A privacy-focused, serverless chat application that stores messages locally in your browser and enables sharing via URL. Built with vanilla JavaScript and designed for speed, simplicity, and maximum privacy.",
+  "version": "2.0.0",
+  "description": "A privacy-focused, serverless chat application with client-side encryption and native sharing capabilities",
   "keywords": [
-      "chat",
-      "privacy",
-      "serverless",
-      "vanilla-js",
-      "javascript",
-      "pug",
-      "parcel"
+    "chat",
+    "privacy",
+    "encryption",
+    "pwa",
+    "serverless",
+    "web-share-api"
   ],
   "license": "WTFPL",
-  "author": "Michael Czechowski <mail@m6c9.de",
+  "author": "Michael Czechowski <mail@m6c9.de>",
   "type": "module",
   "scripts": {
-    "dev": "parcel src/index.pug",
-    "build": "parcel build src/index.pug --public-url /flash-chat --dist-dir docs"
+    "dev": "parcel src/index.pug --port 1312",
+    "build": "parcel build src/index.pug --public-url /flash-chat --dist-dir dist",
+    "preview": "parcel serve dist --port 8080"
   },
   "devDependencies": {
+    "@parcel/packager-raw-url": "^2.15.4",
     "@parcel/transformer-pug": "^2.15.4",
+    "@parcel/transformer-webmanifest": "^2.15.4",
     "parcel": "^2.15.4",
     "pug": "^3.0.3"
   }
