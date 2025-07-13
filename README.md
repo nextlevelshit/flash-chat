@@ -36,11 +36,12 @@ Simply open `index.html` in any modern web browser after building.
 
 ## Usage
 
-### Basic Messaging
-1. Type your message in the input field
-2. Press Enter or click "Send"
-3. Messages are automatically saved to localStorage
-4. Switch between Signal and IRC modes using the mode toggle
+### Getting Started
+1. Type your message in the input field and press Enter or click Send
+2. Share conversations by clicking the Share button or using the auto-generated link in the status bar
+3. Switch between Signal and IRC interface modes using the mode toggle button
+4. Clear all data permanently using the Destroy button
+5. Toggle between dark and light themes using the theme button
 
 ### Sharing Conversations
 1. **Automatic Sharing**: Each message automatically generates a shareable URL
@@ -52,8 +53,8 @@ Simply open `index.html` in any modern web browser after building.
 - **IRC Mode**: Traditional linear chat with timestamps and usernames
 
 ### Data Management
-- **Help**: Click the "Help" button to view usage instructions
-- **Destroy**: Click the "Destroy" button to permanently delete all messages and data
+- **Help**: Click the Help button to view usage instructions
+- **Destroy**: Click the Destroy button to permanently delete all messages and data
 - **Theme Toggle**: Switch between dark and light themes
 
 ## Technical Architecture

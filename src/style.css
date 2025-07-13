@@ -6,6 +6,8 @@
     --user-bg: #0066cc;
     --other-bg: #555;
     --status-bg: #111;
+    --modal-bg: rgba(0, 0, 0, 0.8);
+    --modal-content-bg: #111;
 }
 
 [data-theme="light"] {
@@ -16,6 +18,8 @@
     --user-bg: #0066cc;
     --other-bg: #e5e5e5;
     --status-bg: #f5f5f5;
+    --modal-bg: rgba(255, 255, 255, 0.9);
+    --modal-content-bg: #fff;
 }
 
 * {
@@ -33,6 +37,98 @@ body {
     flex-direction: column;
 }
 
+/* Modal styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--modal-bg);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: var(--modal-content-bg);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 2rem;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    margin: 1rem;
+}
+
+.modal-content h2 {
+    color: var(--accent);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.modal-content h3 {
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+    margin-top: 1rem;
+}
+
+.welcome-section {
+    margin-bottom: 1.5rem;
+}
+
+.welcome-section p {
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+.welcome-section ol {
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.welcome-section ol li {
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+.welcome-section strong {
+    color: var(--accent);
+}
+
+.welcome-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.welcome-actions button {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 1rem;
+    border-radius: 4px;
+}
+
+.welcome-actions label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.welcome-actions input[type="checkbox"] {
+    accent-color: var(--accent);
+}
+
 header {
     padding: 1rem;
     border-bottom: 1px solid var(--border);
@@ -45,15 +141,33 @@ h1 {
     font-size: 1.2rem;
 }
 
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
 .controls button {
     background: var(--accent);
     color: var(--bg);
     border: none;
     padding: 0.5rem;
-    margin-left: 0.5rem;
     cursor: pointer;
     font-family: inherit;
     font-size: 0.9rem;
+    border-radius: 4px;
+}
+
+.controls button:hover {
+    opacity: 0.8;
+}
+
+#destroy-btn {
+    background: #cc0000;
+}
+
+#destroy-btn:hover {
+    background: #ff0000;
 }
 
 main {
@@ -82,7 +196,7 @@ main {
     font-weight: bold;
 }
 
-/* Signal mode - Fixed selectors */
+/* Signal mode */
 [data-mode="signal"] .message {
     display: flex;
     margin-bottom: 1rem;
@@ -199,7 +313,7 @@ button[type="submit"] {
 
     .controls button {
         font-size: 0.8rem;
-        margin: 0.2rem;
+        padding: 0.4rem;
     }
 
     .status-info {
@@ -208,5 +322,15 @@ button[type="submit"] {
 
     .share-link {
         max-width: 200px;
+    }
+
+    .modal-content {
+        margin: 0.5rem;
+        padding: 1rem;
+    }
+
+    .welcome-actions {
+        flex-direction: column;
+        align-items: stretch;
     }
 }

@@ -11,7 +11,47 @@ html(lang="en")
             .controls
                 button#theme-toggle 🌙
                 button#mode-toggle Signal
+                button#help-btn ❓ Help
+                button#destroy-btn 🗑️ Destroy
                 button#share-btn 📋 Share
+
+        #welcome-screen.modal
+            .modal-content
+                h2 Welcome to Flash Chat
+
+                .welcome-section
+                    h3 Usage Instructions
+                    ol
+                        li Type your message in the input field and press Enter or click Send
+                        li Share conversations by clicking the Share button or using the auto-generated link in the status bar
+                        li Switch between Signal and IRC interface modes using the mode toggle button
+                        li Clear all data permanently using the Destroy button
+                        li Toggle between dark and light themes using the theme button
+
+                .welcome-section
+                    h3 Key Features
+                    p
+                        strong Local Storage:
+                        |  All messages are stored in your browser's localStorage. No server required.
+                    p
+                        strong Share via URL:
+                        |  Generate shareable links that contain your entire conversation history.
+                    p
+                        strong Dual Interface:
+                        |  Switch between Signal-style bubbles and IRC-style linear chat.
+                    p
+                        strong Theme Support:
+                        |  Toggle between dark and light themes.
+
+                .welcome-section
+                    h3 Privacy & Security
+                    p Your messages never leave your device unless you explicitly share them via URL. The app works entirely offline after initial load.
+
+                .welcome-actions
+                    button#start-chatting Start Chatting
+                    label
+                        input#dont-show-again(type="checkbox")
+                        span Don't show this again
 
         main#chat-container
             .messages(role="log" aria-live="polite" aria-label="Chat messages")
@@ -49,6 +89,52 @@ html(lang="en")
                 lastUpdate: null,
                 lastSync: Date.now()
             };
+
+            // Welcome screen handling
+            function showWelcomeScreen() {
+                document.getElementById('welcome-screen').style.display = 'flex';
+            }
+
+            function hideWelcomeScreen() {
+                document.getElementById('welcome-screen').style.display = 'none';
+            }
+
+            function checkWelcomeScreen() {
+                const hasSeenWelcome = localStorage.getItem('flash_seen_welcome');
+                if (!hasSeenWelcome) {
+                    showWelcomeScreen();
+                }
+            }
+
+            // Destroy all data
+            function destroyAllData() {
+                if (confirm('Are you sure you want to permanently delete all messages and data? This cannot be undone.')) {
+                    // Clear all message data
+                    Object.keys(localStorage).forEach(key => {
+                        if (key.startsWith('msg_') || key.startsWith('flash_')) {
+                            localStorage.removeItem(key);
+                        }
+                    });
+
+                    // Reset stats
+                    stats = {
+                        sent: 0,
+                        received: 0,
+                        lastUpdate: null,
+                        lastSync: Date.now()
+                    };
+
+                    // Clear UI
+                    document.querySelector('.messages').innerHTML = '';
+                    updateStatusDisplay();
+                    updateShareLink();
+
+                    // Show welcome screen again
+                    showWelcomeScreen();
+
+                    alert('All data has been destroyed.');
+                }
+            }
 
             // Update share link and copy to clipboard
             function updateShareLink() {
@@ -136,11 +222,15 @@ html(lang="en")
                 });
             }
 
-            // Theme/mode toggles
+            // Event listeners
             const themeToggle = document.getElementById('theme-toggle');
             const modeToggle = document.getElementById('mode-toggle');
+            const helpBtn = document.getElementById('help-btn');
+            const destroyBtn = document.getElementById('destroy-btn');
             const shareBtn = document.getElementById('share-btn');
             const shareLinkElement = document.getElementById('current-link');
+            const startChattingBtn = document.getElementById('start-chatting');
+            const dontShowAgainCheckbox = document.getElementById('dont-show-again');
             const body = document.body;
 
             themeToggle.addEventListener('click', () => {
@@ -158,13 +248,22 @@ html(lang="en")
                 reRenderMessages();
             });
 
+            helpBtn.addEventListener('click', showWelcomeScreen);
+            destroyBtn.addEventListener('click', destroyAllData);
             shareBtn.addEventListener('click', generateShareURL);
+
+            startChattingBtn.addEventListener('click', () => {
+                if (dontShowAgainCheckbox.checked) {
+                    localStorage.setItem('flash_seen_welcome', 'true');
+                }
+                hideWelcomeScreen();
+            });
 
             // Click to copy share link
             shareLinkElement.addEventListener('click', () => {
                 navigator.clipboard.writeText(shareLinkElement.textContent).then(() => {
                     const original = shareLinkElement.textContent;
-                    shareLinkElement.textContent = 'Copied to Clipboard!';
+                    shareLinkElement.textContent = '✅ Copied!';
                     setTimeout(() => shareLinkElement.textContent = original, 1500);
                 });
             });
@@ -258,3 +357,4 @@ html(lang="en")
             calculateStats();
             reRenderMessages();
             updateShareLink();
+            checkWelcomeScreen();
