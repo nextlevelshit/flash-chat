@@ -1,0 +1,334 @@
+:root {
+  --bg: #000;
+  --text: #0f0;
+  --accent: #ff0;
+  --border: #333;
+  --user-bg: #06c;
+  --other-bg: #555;
+  --status-bg: #111;
+  --modal-bg: #000c;
+  --modal-content-bg: #111;
+}
+
+[data-theme="light"] {
+  --bg: #fff;
+  --text: #000;
+  --accent: #06c;
+  --border: #ccc;
+  --user-bg: #06c;
+  --other-bg: #e5e5e5;
+  --status-bg: #f5f5f5;
+  --modal-bg: #ffffffe6;
+  --modal-content-bg: #fff;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  flex-direction: column;
+  height: 100vh;
+  font-family: Courier New, monospace;
+  display: flex;
+}
+
+.modal {
+  background: var(--modal-bg);
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+.modal-content {
+  background: var(--modal-content-bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  max-width: 600px;
+  max-height: 80vh;
+  margin: 1rem;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.modal-content h2 {
+  color: var(--accent);
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.modal-content h3 {
+  color: var(--accent);
+  margin-top: 1rem;
+  margin-bottom: .5rem;
+}
+
+.welcome-section {
+  margin-bottom: 1.5rem;
+}
+
+.welcome-section p {
+  margin-bottom: .5rem;
+  line-height: 1.5;
+}
+
+.welcome-section ol {
+  margin-bottom: 1rem;
+  margin-left: 1.5rem;
+}
+
+.welcome-section ol li {
+  margin-bottom: .5rem;
+  line-height: 1.5;
+}
+
+.welcome-section strong {
+  color: var(--accent);
+}
+
+.welcome-actions {
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  display: flex;
+}
+
+.welcome-actions button {
+  background: var(--accent);
+  color: var(--bg);
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  padding: .75rem 1.5rem;
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.welcome-actions label {
+  cursor: pointer;
+  align-items: center;
+  gap: .5rem;
+  display: flex;
+}
+
+.welcome-actions input[type="checkbox"] {
+  accent-color: var(--accent);
+}
+
+header {
+  border-bottom: 1px solid var(--border);
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  display: flex;
+}
+
+h1 {
+  font-size: 1.2rem;
+}
+
+.controls {
+  flex-wrap: wrap;
+  gap: .5rem;
+  display: flex;
+}
+
+.controls button {
+  background: var(--accent);
+  color: var(--bg);
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  padding: .5rem;
+  font-family: inherit;
+  font-size: .9rem;
+}
+
+.controls button:hover {
+  opacity: .8;
+}
+
+#destroy-btn {
+  background: #c00;
+}
+
+#destroy-btn:hover {
+  background: red;
+}
+
+main {
+  flex-direction: column;
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.messages {
+  flex: 1;
+  padding: 1rem;
+  line-height: 1.4;
+  overflow-y: auto;
+}
+
+.message {
+  margin-bottom: .5rem;
+}
+
+.timestamp {
+  color: var(--accent);
+}
+
+.sender {
+  font-weight: bold;
+}
+
+[data-mode="signal"] .message {
+  margin-bottom: 1rem;
+  display: flex;
+}
+
+[data-mode="signal"] .message.current-user {
+  justify-content: flex-end;
+}
+
+[data-mode="signal"] .message.other-user {
+  justify-content: flex-start;
+}
+
+[data-mode="signal"] .bubble {
+  border-radius: 12px;
+  flex-direction: column;
+  max-width: 70%;
+  padding: .5rem 1rem;
+  display: flex;
+}
+
+[data-mode="signal"] .message.current-user .bubble {
+  background: var(--user-bg);
+  color: #fff;
+}
+
+[data-mode="signal"] .message.other-user .bubble {
+  background: var(--other-bg);
+  color: var(--text);
+}
+
+[data-mode="signal"] .time {
+  opacity: .7;
+  align-self: flex-end;
+  margin-top: .2rem;
+  font-size: .8rem;
+}
+
+.status-bar {
+  background: var(--status-bg);
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: .5rem 1rem;
+  font-size: .8rem;
+  display: flex;
+}
+
+.status-info {
+  flex-wrap: wrap;
+  gap: 1rem;
+  display: flex;
+}
+
+.status-info span {
+  opacity: .8;
+}
+
+.share-link {
+  color: var(--accent);
+  cursor: pointer;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 300px;
+  font-family: inherit;
+  font-size: .7rem;
+  text-decoration: underline;
+  overflow: hidden;
+}
+
+footer {
+  border-top: 1px solid var(--border);
+  padding: 1rem;
+}
+
+#message-form {
+  gap: .5rem;
+  display: flex;
+}
+
+#message-input {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  flex: 1;
+  padding: .5rem;
+  font-family: inherit;
+}
+
+#message-input:focus {
+  outline: 2px solid var(--accent);
+}
+
+button[type="submit"] {
+  background: var(--accent);
+  color: var(--bg);
+  cursor: pointer;
+  border: none;
+  padding: .5rem 1rem;
+  font-family: inherit;
+}
+
+@media (width <= 768px) {
+  [data-mode="signal"] .bubble {
+    max-width: 85%;
+  }
+
+  .controls {
+    flex-wrap: wrap;
+  }
+
+  .controls button {
+    padding: .4rem;
+    font-size: .8rem;
+  }
+
+  .status-info {
+    font-size: .7rem;
+  }
+
+  .share-link {
+    max-width: 200px;
+  }
+
+  .modal-content {
+    margin: .5rem;
+    padding: 1rem;
+  }
+
+  .welcome-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+/*# sourceMappingURL=flash.2cdaf7bc.css.map */

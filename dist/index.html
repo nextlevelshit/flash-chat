@@ -1,0 +1,224 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Flash Chat</title><link rel="stylesheet" href="/flash.2cdaf7bc.css"></head><body data-theme="dark" data-mode="signal"><header><h1>Flash Chat</h1><div class="controls"><button id="theme-toggle">🌙</button><button id="mode-toggle">Signal</button><button id="help-btn">❓ Help</button><button id="destroy-btn">🗑️ Destroy</button><button id="share-btn">📋 Share</button></div></header><div class="modal" id="welcome-screen"><div class="modal-content"><h2>Welcome to Flash Chat</h2><div class="welcome-section"><h3>Usage Instructions</h3><ol><li>Type your message in the input field and press Enter or click Send</li><li>Share conversations by clicking the Share button or using the auto-generated link in the status bar</li><li>Switch between Signal and IRC interface modes using the mode toggle button</li><li>Clear all data permanently using the Destroy button</li><li>Toggle between dark and light themes using the theme button</li></ol></div><div class="welcome-section"><h3>Key Features</h3><p><strong>Local Storage:</strong> All messages are stored in your browser's localStorage. No server required.</p><p><strong>Share via URL:</strong> Generate shareable links that contain your entire conversation history.</p><p><strong>Dual Interface:</strong> Switch between Signal-style bubbles and IRC-style linear chat.</p><p><strong>Theme Support:</strong> Toggle between dark and light themes.</p></div><div class="welcome-section"><h3>Privacy &amp; Security</h3><p>Your messages never leave your device unless you explicitly share them via URL. The app works entirely offline after initial load.</p></div><div class="welcome-actions"><button id="start-chatting">Start Chatting</button><label><input id="dont-show-again" type="checkbox"><span>Don't show this again</span></label></div></div></div><main id="chat-container"><div class="messages" role="log" aria-live="polite" aria-label="Chat messages"></div><div class="status-bar"><div class="status-info"><span id="sent-count">Sent: 0</span><span id="received-count">Received: 0</span><span id="last-update">Last: Never</span><span id="sync-status">Synced: ✓</span></div><div class="share-link" id="current-link" title="Click to copy">Loading...</div></div></main><footer><form id="message-form"><input id="message-input" type="text" placeholder="Type message..." aria-label="Message input"><button type="submit">Send</button></form></footer><script>// Generate or retrieve user ID
+function getUserId() {
+    let userId = localStorage.getItem('flash_user_id');
+    if (!userId) {
+        userId = 'user_' + Math.random().toString(36).substr(2, 8);
+        localStorage.setItem('flash_user_id', userId);
+    }
+    return userId;
+}
+const currentUserId = getUserId();
+// Status tracking
+let stats = {
+    sent: 0,
+    received: 0,
+    lastUpdate: null,
+    lastSync: Date.now()
+};
+// Welcome screen handling
+function showWelcomeScreen() {
+    document.getElementById('welcome-screen').style.display = 'flex';
+}
+function hideWelcomeScreen() {
+    document.getElementById('welcome-screen').style.display = 'none';
+}
+function checkWelcomeScreen() {
+    const hasSeenWelcome = localStorage.getItem('flash_seen_welcome');
+    if (!hasSeenWelcome) showWelcomeScreen();
+}
+// Destroy all data
+function destroyAllData() {
+    if (confirm('Are you sure you want to permanently delete all messages and data? This cannot be undone.')) {
+        // Clear all message data
+        Object.keys(localStorage).forEach((key)=>{
+            if (key.startsWith('msg_') || key.startsWith('flash_')) localStorage.removeItem(key);
+        });
+        // Reset stats
+        stats = {
+            sent: 0,
+            received: 0,
+            lastUpdate: null,
+            lastSync: Date.now()
+        };
+        // Clear UI
+        document.querySelector('.messages').innerHTML = '';
+        updateStatusDisplay();
+        updateShareLink();
+        // Show welcome screen again
+        showWelcomeScreen();
+        alert('All data has been destroyed.');
+    }
+}
+// Update share link and copy to clipboard
+function updateShareLink() {
+    const messages = Object.keys(localStorage).filter((key)=>key.startsWith('msg_')).sort().map((key)=>JSON.parse(localStorage.getItem(key)));
+    const data = btoa(JSON.stringify(messages));
+    const url = `${window.location.origin}${window.location.pathname}?data=${data}`;
+    const linkElement = document.getElementById('current-link');
+    linkElement.textContent = url;
+    linkElement.title = 'Click to copy: ' + url;
+    // Auto-copy to clipboard
+    navigator.clipboard.writeText(url).catch((e)=>{
+        console.warn('Could not copy to clipboard:', e);
+    });
+    stats.lastSync = Date.now();
+    updateStatusDisplay();
+}
+// Update status display
+function updateStatusDisplay() {
+    document.getElementById('sent-count').textContent = `Sent: ${stats.sent}`;
+    document.getElementById('received-count').textContent = `Received: ${stats.received}`;
+    const lastUpdate = stats.lastUpdate ? new Date(stats.lastUpdate).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit'
+    }) : 'Never';
+    document.getElementById('last-update').textContent = `Last: ${lastUpdate}`;
+    const syncTime = new Date(stats.lastSync).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    document.getElementById('sync-status').textContent = `Synced: ${syncTime}`;
+}
+// Calculate stats from localStorage
+function calculateStats() {
+    const messages = Object.keys(localStorage).filter((key)=>key.startsWith('msg_')).map((key)=>JSON.parse(localStorage.getItem(key)));
+    stats.sent = messages.filter((msg)=>msg.userId === currentUserId).length;
+    stats.received = messages.filter((msg)=>msg.userId !== currentUserId).length;
+    stats.lastUpdate = messages.length > 0 ? Math.max(...messages.map((msg)=>msg.timestamp)) : null;
+}
+// URL handling for shared messages
+function loadFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    const data = params.get('data');
+    if (data) try {
+        const messages = JSON.parse(atob(data));
+        messages.forEach((msg)=>{
+            const key = `msg_${msg.timestamp}`;
+            if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify(msg));
+        });
+        window.history.replaceState({}, '', window.location.pathname);
+    } catch (e) {
+        console.error('Invalid share data');
+    }
+}
+// Generate share URL (legacy button)
+function generateShareURL() {
+    const messages = Object.keys(localStorage).filter((key)=>key.startsWith('msg_')).sort().map((key)=>JSON.parse(localStorage.getItem(key)));
+    const data = btoa(JSON.stringify(messages));
+    const url = `${window.location.origin}${window.location.pathname}?data=${data}`;
+    navigator.clipboard.writeText(url).then(()=>{
+        const btn = document.getElementById('share-btn');
+        const original = btn.textContent;
+        btn.textContent = "\u2705 Copied!";
+        setTimeout(()=>btn.textContent = original, 2000);
+    });
+}
+// Event listeners
+const themeToggle = document.getElementById('theme-toggle');
+const modeToggle = document.getElementById('mode-toggle');
+const helpBtn = document.getElementById('help-btn');
+const destroyBtn = document.getElementById('destroy-btn');
+const shareBtn = document.getElementById('share-btn');
+const shareLinkElement = document.getElementById('current-link');
+const startChattingBtn = document.getElementById('start-chatting');
+const dontShowAgainCheckbox = document.getElementById('dont-show-again');
+const body = document.body;
+themeToggle.addEventListener('click', ()=>{
+    const current = body.dataset.theme;
+    body.dataset.theme = current === 'dark' ? 'light' : 'dark';
+    themeToggle.textContent = current === 'dark' ? "\u2600\uFE0F" : "\uD83C\uDF19";
+    savePreferences();
+});
+modeToggle.addEventListener('click', ()=>{
+    const current = body.dataset.mode;
+    body.dataset.mode = current === 'irc' ? 'signal' : 'irc';
+    modeToggle.textContent = current === 'irc' ? 'Signal' : 'IRC';
+    savePreferences();
+    reRenderMessages();
+});
+helpBtn.addEventListener('click', showWelcomeScreen);
+destroyBtn.addEventListener('click', destroyAllData);
+shareBtn.addEventListener('click', generateShareURL);
+startChattingBtn.addEventListener('click', ()=>{
+    if (dontShowAgainCheckbox.checked) localStorage.setItem('flash_seen_welcome', 'true');
+    hideWelcomeScreen();
+});
+// Click to copy share link
+shareLinkElement.addEventListener('click', ()=>{
+    navigator.clipboard.writeText(shareLinkElement.textContent).then(()=>{
+        const original = shareLinkElement.textContent;
+        shareLinkElement.textContent = "\u2705 Copied!";
+        setTimeout(()=>shareLinkElement.textContent = original, 1500);
+    });
+});
+// Message handling
+const form = document.getElementById('message-form');
+const input = document.getElementById('message-input');
+const messages = document.querySelector('.messages');
+form.addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+    addMessage(text, currentUserId);
+    input.value = '';
+});
+function addMessage(text, userId) {
+    const timestamp = Date.now();
+    const message = {
+        text,
+        timestamp,
+        userId
+    };
+    localStorage.setItem(`msg_${timestamp}`, JSON.stringify(message));
+    renderMessage(message);
+    // Update stats and share link
+    if (userId === currentUserId) stats.sent++;
+    else stats.received++;
+    stats.lastUpdate = timestamp;
+    updateShareLink();
+}
+function renderMessage(message) {
+    const div = document.createElement('div');
+    const isCurrentUser = message.userId === currentUserId;
+    div.className = `message ${isCurrentUser ? 'current-user' : 'other-user'}`;
+    div.dataset.userId = message.userId;
+    const time = new Date(message.timestamp).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    if (document.body.dataset.mode === 'irc') div.innerHTML = `<span class="timestamp">[${time}]</span> <span class="sender">&lt;${message.userId}&gt;</span> <span class="text">${message.text}</span>`;
+    else div.innerHTML = `<div class="bubble"><span class="text">${message.text}</span><span class="time">${time}</span></div>`;
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+}
+function reRenderMessages() {
+    messages.innerHTML = '';
+    Object.keys(localStorage).filter((key)=>key.startsWith('msg_')).sort().forEach((key)=>{
+        const message = JSON.parse(localStorage.getItem(key));
+        renderMessage(message);
+    });
+}
+// Load/save UI preferences
+function loadPreferences() {
+    const prefs = JSON.parse(localStorage.getItem('flash_prefs') || '{}');
+    document.body.dataset.theme = prefs.theme || 'dark';
+    document.body.dataset.mode = prefs.mode || 'signal';
+    document.getElementById('theme-toggle').textContent = prefs.theme === 'light' ? "\u2600\uFE0F" : "\uD83C\uDF19";
+    document.getElementById('mode-toggle').textContent = prefs.mode === 'irc' ? 'IRC' : 'Signal';
+}
+function savePreferences() {
+    const prefs = {
+        theme: document.body.dataset.theme,
+        mode: document.body.dataset.mode
+    };
+    localStorage.setItem('flash_prefs', JSON.stringify(prefs));
+}
+// Initialize
+loadFromURL();
+loadPreferences();
+calculateStats();
+reRenderMessages();
+updateShareLink();
+checkWelcomeScreen();
+
+</script><script src="/flash.9cb2a9a4.js"></script></body></html>
