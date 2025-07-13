@@ -1,0 +1,17 @@
+{
+  "name": "flash",
+  "version": "1.0.0",
+  "description": "",
+  "license": "WTFPL",
+  "author": "Michael Czechowski <mail@m6c9.de",
+  "type": "module",
+  "scripts": {
+    "dev": "parcel src/index.pug",
+    "build": "parcel build src/index.pug --public-url ./"
+  },
+  "devDependencies": {
+    "@parcel/transformer-pug": "^2.15.4",
+    "parcel": "^2.15.4",
+    "pug": "^3.0.3"
+  }
+}
