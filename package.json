@@ -11,9 +11,6 @@
       "pug",
       "parcel"
   ],
-  "dist": {
-
-  },
   "license": "WTFPL",
   "author": "Michael Czechowski <mail@m6c9.de",
   "type": "module",
