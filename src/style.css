@@ -5,6 +5,7 @@
     --border: #333;
     --user-bg: #0066cc;
     --other-bg: #555;
+    --status-bg: #111;
 }
 
 [data-theme="light"] {
@@ -14,6 +15,7 @@
     --border: #ccc;
     --user-bg: #0066cc;
     --other-bg: #e5e5e5;
+    --status-bg: #f5f5f5;
 }
 
 * {
@@ -57,10 +59,12 @@ h1 {
 main {
     flex: 1;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .messages {
-    height: 100%;
+    flex: 1;
     overflow-y: auto;
     padding: 1rem;
     line-height: 1.4;
@@ -78,17 +82,17 @@ main {
     font-weight: bold;
 }
 
-/* Signal mode */
+/* Signal mode - Fixed selectors */
 [data-mode="signal"] .message {
     display: flex;
     margin-bottom: 1rem;
 }
 
-[data-mode="signal"] .message.user {
+[data-mode="signal"] .message.current-user {
     justify-content: flex-end;
 }
 
-[data-mode="signal"] .message.other {
+[data-mode="signal"] .message.other-user {
     justify-content: flex-start;
 }
 
@@ -100,12 +104,12 @@ main {
     flex-direction: column;
 }
 
-[data-mode="signal"] .message.user .bubble {
+[data-mode="signal"] .message.current-user .bubble {
     background: var(--user-bg);
     color: white;
 }
 
-[data-mode="signal"] .message.other .bubble {
+[data-mode="signal"] .message.other-user .bubble {
     background: var(--other-bg);
     color: var(--text);
 }
@@ -115,6 +119,41 @@ main {
     opacity: 0.7;
     margin-top: 0.2rem;
     align-self: flex-end;
+}
+
+/* Status bar */
+.status-bar {
+    background: var(--status-bg);
+    border-top: 1px solid var(--border);
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.status-info {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.status-info span {
+    opacity: 0.8;
+}
+
+.share-link {
+    font-family: inherit;
+    font-size: 0.7rem;
+    color: var(--accent);
+    cursor: pointer;
+    text-decoration: underline;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 footer {
@@ -161,5 +200,13 @@ button[type="submit"] {
     .controls button {
         font-size: 0.8rem;
         margin: 0.2rem;
+    }
+
+    .status-info {
+        font-size: 0.7rem;
+    }
+
+    .share-link {
+        max-width: 200px;
     }
 }

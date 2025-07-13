@@ -16,6 +16,14 @@ html(lang="en")
         main#chat-container
             .messages(role="log" aria-live="polite" aria-label="Chat messages")
 
+            .status-bar
+                .status-info
+                    span#sent-count Sent: 0
+                    span#received-count Received: 0
+                    span#last-update Last: Never
+                    span#sync-status Synced: ✓
+                .share-link#current-link(title="Click to copy") Loading...
+
         footer
             form#message-form
                 input#message-input(type="text" placeholder="Type message..." aria-label="Message input")
@@ -33,6 +41,62 @@ html(lang="en")
             }
 
             const currentUserId = getUserId();
+
+            // Status tracking
+            let stats = {
+                sent: 0,
+                received: 0,
+                lastUpdate: null,
+                lastSync: Date.now()
+            };
+
+            // Update share link and copy to clipboard
+            function updateShareLink() {
+                const messages = Object.keys(localStorage)
+                    .filter(key => key.startsWith('msg_'))
+                    .sort()
+                    .map(key => JSON.parse(localStorage.getItem(key)));
+
+                const data = btoa(JSON.stringify(messages));
+                const url = `${window.location.origin}${window.location.pathname}?data=${data}`;
+
+                const linkElement = document.getElementById('current-link');
+                linkElement.textContent = url;
+                linkElement.title = 'Click to copy: ' + url;
+
+                // Auto-copy to clipboard
+                navigator.clipboard.writeText(url).catch(e => {
+                    console.warn('Could not copy to clipboard:', e);
+                });
+
+                stats.lastSync = Date.now();
+                updateStatusDisplay();
+            }
+
+            // Update status display
+            function updateStatusDisplay() {
+                document.getElementById('sent-count').textContent = `Sent: ${stats.sent}`;
+                document.getElementById('received-count').textContent = `Received: ${stats.received}`;
+
+                const lastUpdate = stats.lastUpdate ?
+                    new Date(stats.lastUpdate).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) :
+                    'Never';
+                document.getElementById('last-update').textContent = `Last: ${lastUpdate}`;
+
+                const syncTime = new Date(stats.lastSync).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+                document.getElementById('sync-status').textContent = `Synced: ${syncTime}`;
+            }
+
+            // Calculate stats from localStorage
+            function calculateStats() {
+                const messages = Object.keys(localStorage)
+                    .filter(key => key.startsWith('msg_'))
+                    .map(key => JSON.parse(localStorage.getItem(key)));
+
+                stats.sent = messages.filter(msg => msg.userId === currentUserId).length;
+                stats.received = messages.filter(msg => msg.userId !== currentUserId).length;
+                stats.lastUpdate = messages.length > 0 ? Math.max(...messages.map(msg => msg.timestamp)) : null;
+            }
 
             // URL handling for shared messages
             function loadFromURL() {
@@ -54,7 +118,7 @@ html(lang="en")
                 }
             }
 
-            // Generate share URL
+            // Generate share URL (legacy button)
             function generateShareURL() {
                 const messages = Object.keys(localStorage)
                     .filter(key => key.startsWith('msg_'))
@@ -72,10 +136,11 @@ html(lang="en")
                 });
             }
 
-            // Theme/mode toggles (same as before)
+            // Theme/mode toggles
             const themeToggle = document.getElementById('theme-toggle');
             const modeToggle = document.getElementById('mode-toggle');
             const shareBtn = document.getElementById('share-btn');
+            const shareLinkElement = document.getElementById('current-link');
             const body = document.body;
 
             themeToggle.addEventListener('click', () => {
@@ -94,6 +159,15 @@ html(lang="en")
             });
 
             shareBtn.addEventListener('click', generateShareURL);
+
+            // Click to copy share link
+            shareLinkElement.addEventListener('click', () => {
+                navigator.clipboard.writeText(shareLinkElement.textContent).then(() => {
+                    const original = shareLinkElement.textContent;
+                    shareLinkElement.textContent = 'Copied to Clipboard!';
+                    setTimeout(() => shareLinkElement.textContent = original, 1500);
+                });
+            });
 
             // Message handling
             const form = document.getElementById('message-form');
@@ -115,6 +189,16 @@ html(lang="en")
 
                 localStorage.setItem(`msg_${timestamp}`, JSON.stringify(message));
                 renderMessage(message);
+
+                // Update stats and share link
+                if (userId === currentUserId) {
+                    stats.sent++;
+                } else {
+                    stats.received++;
+                }
+                stats.lastUpdate = timestamp;
+
+                updateShareLink();
             }
 
             function renderMessage(message) {
@@ -168,6 +252,9 @@ html(lang="en")
                 localStorage.setItem('flash_prefs', JSON.stringify(prefs));
             }
 
+            // Initialize
             loadFromURL();
             loadPreferences();
+            calculateStats();
             reRenderMessages();
+            updateShareLink();
