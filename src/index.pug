@@ -5,12 +5,13 @@ html(lang="en")
         meta(name="viewport" content="width=device-width, initial-scale=1")
         title Flash Chat
         link(rel="stylesheet" href="style.css")
-    body(data-theme="dark" data-mode="irc")
+    body(data-theme="dark" data-mode="signal")
         header
             h1 Flash Chat
             .controls
                 button#theme-toggle 🌙
-                button#mode-toggle IRC
+                button#mode-toggle Signal
+                button#share-btn 📋 Share
 
         main#chat-container
             .messages(role="log" aria-live="polite" aria-label="Chat messages")
@@ -21,22 +22,78 @@ html(lang="en")
                 button(type="submit") Send
 
         script.
-            // Theme switching
+            // Generate or retrieve user ID
+            function getUserId() {
+                let userId = localStorage.getItem('flash_user_id');
+                if (!userId) {
+                    userId = 'user_' + Math.random().toString(36).substr(2, 8);
+                    localStorage.setItem('flash_user_id', userId);
+                }
+                return userId;
+            }
+
+            const currentUserId = getUserId();
+
+            // URL handling for shared messages
+            function loadFromURL() {
+                const params = new URLSearchParams(window.location.search);
+                const data = params.get('data');
+                if (data) {
+                    try {
+                        const messages = JSON.parse(atob(data));
+                        messages.forEach(msg => {
+                            const key = `msg_${msg.timestamp}`;
+                            if (!localStorage.getItem(key)) {
+                                localStorage.setItem(key, JSON.stringify(msg));
+                            }
+                        });
+                        window.history.replaceState({}, '', window.location.pathname);
+                    } catch (e) {
+                        console.error('Invalid share data');
+                    }
+                }
+            }
+
+            // Generate share URL
+            function generateShareURL() {
+                const messages = Object.keys(localStorage)
+                    .filter(key => key.startsWith('msg_'))
+                    .sort()
+                    .map(key => JSON.parse(localStorage.getItem(key)));
+
+                const data = btoa(JSON.stringify(messages));
+                const url = `${window.location.origin}${window.location.pathname}?data=${data}`;
+
+                navigator.clipboard.writeText(url).then(() => {
+                    const btn = document.getElementById('share-btn');
+                    const original = btn.textContent;
+                    btn.textContent = '✅ Copied!';
+                    setTimeout(() => btn.textContent = original, 2000);
+                });
+            }
+
+            // Theme/mode toggles (same as before)
             const themeToggle = document.getElementById('theme-toggle');
             const modeToggle = document.getElementById('mode-toggle');
+            const shareBtn = document.getElementById('share-btn');
             const body = document.body;
 
             themeToggle.addEventListener('click', () => {
                 const current = body.dataset.theme;
                 body.dataset.theme = current === 'dark' ? 'light' : 'dark';
                 themeToggle.textContent = current === 'dark' ? '☀️' : '🌙';
+                savePreferences();
             });
 
             modeToggle.addEventListener('click', () => {
                 const current = body.dataset.mode;
                 body.dataset.mode = current === 'irc' ? 'signal' : 'irc';
                 modeToggle.textContent = current === 'irc' ? 'Signal' : 'IRC';
+                savePreferences();
+                reRenderMessages();
             });
+
+            shareBtn.addEventListener('click', generateShareURL);
 
             // Message handling
             const form = document.getElementById('message-form');
@@ -48,24 +105,23 @@ html(lang="en")
                 const text = input.value.trim();
                 if (!text) return;
 
-                addMessage(text);
+                addMessage(text, currentUserId);
                 input.value = '';
             });
 
-            function addMessage(text) {
+            function addMessage(text, userId) {
                 const timestamp = Date.now();
-                const message = { text, timestamp };
+                const message = {text, timestamp, userId};
 
-                // Store in localStorage
                 localStorage.setItem(`msg_${timestamp}`, JSON.stringify(message));
-
-                // Render message
                 renderMessage(message);
             }
 
             function renderMessage(message) {
                 const div = document.createElement('div');
-                div.className = 'message';
+                const isCurrentUser = message.userId === currentUserId;
+                div.className = `message ${isCurrentUser ? 'current-user' : 'other-user'}`;
+                div.dataset.userId = message.userId;
 
                 const time = new Date(message.timestamp).toLocaleTimeString([], {
                     hour: '2-digit',
@@ -73,7 +129,7 @@ html(lang="en")
                 });
 
                 if (document.body.dataset.mode === 'irc') {
-                    div.innerHTML = `<span class="timestamp">[${time}]</span> <span class="text">${message.text}</span>`;
+                    div.innerHTML = `<span class="timestamp">[${time}]</span> <span class="sender">&lt;${message.userId}&gt;</span> <span class="text">${message.text}</span>`;
                 } else {
                     div.innerHTML = `<div class="bubble"><span class="text">${message.text}</span><span class="time">${time}</span></div>`;
                 }
@@ -82,11 +138,36 @@ html(lang="en")
                 messages.scrollTop = messages.scrollHeight;
             }
 
-            // Load messages on startup
-            Object.keys(localStorage)
-                .filter(key => key.startsWith('msg_'))
-                .sort()
-                .forEach(key => {
-                    const message = JSON.parse(localStorage.getItem(key));
-                    renderMessage(message);
-                });
+            function reRenderMessages() {
+                messages.innerHTML = '';
+                Object.keys(localStorage)
+                    .filter(key => key.startsWith('msg_'))
+                    .sort()
+                    .forEach(key => {
+                        const message = JSON.parse(localStorage.getItem(key));
+                        renderMessage(message);
+                    });
+            }
+
+            // Load/save UI preferences
+            function loadPreferences() {
+                const prefs = JSON.parse(localStorage.getItem('flash_prefs') || '{}');
+
+                document.body.dataset.theme = prefs.theme || 'dark';
+                document.body.dataset.mode = prefs.mode || 'signal';
+
+                document.getElementById('theme-toggle').textContent = prefs.theme === 'light' ? '☀️' : '🌙';
+                document.getElementById('mode-toggle').textContent = prefs.mode === 'irc' ? 'IRC' : 'Signal';
+            }
+
+            function savePreferences() {
+                const prefs = {
+                    theme: document.body.dataset.theme,
+                    mode: document.body.dataset.mode
+                };
+                localStorage.setItem('flash_prefs', JSON.stringify(prefs));
+            }
+
+            loadFromURL();
+            loadPreferences();
+            reRenderMessages();
